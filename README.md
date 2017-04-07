@@ -1,19 +1,19 @@
 # :rotating_light::fire: :key: Vault Incident Response :key: :fire: :rotating_light:
 Preparing for, and responding to, an incident within Vault. This is not necessarily advice to help secure a Vault deployment, but instead, to help when it eventually fails.
 
-## Preparing your Vault for a future incident and forensic review.
+## Preparing your Vault for a future incident and forensic review. :thumbsup:
 A quick checklist for Vault deployments to have proper "forensic readiness" to make an easier time for incident responders.
 
-- [ ] Remember to enable the audit backend with `audit-enable`. This does not happen in the configuration file.
-- [ ] Logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
-- [ ] Prepare to reverse hash values in any investigation.
-- [ ] Tokens should have `display-name` to help assist log analysis.
-- [ ] If you are instrumenting an application client that consumes a "response wrapped" token, and it sees a failure, this may be an exception to handle as a security event. Vault logs will not treat it as such.
+- [x] Remember to enable the audit backend with `audit-enable`. This does not happen in the configuration file.
+- [x] Logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
+- [x] Prepare to reverse hash values in any investigation.
+- [x] Tokens should have `display-name` to help assist log analysis.
+- [x] If you are instrumenting an application client that consumes a "response wrapped" token, and it sees a failure, this may be an exception to handle as a security event. Vault logs will not treat it as such.
 
-### Notable insecure configurations
-- [ ] Using `log_raw` will directly expose token values into your audit backend.
-- [ ] Starting a server with `-dev` will degrade every single protection that Vault offers
-- [ ] Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable or weak.
+### Notable insecure configurations :thumbsdown:
+- [x] Using `log_raw` will directly expose token values into your audit backend.
+- [x] Finding a server with `-dev` will degrade every single protection that Vault offers, possibly in a test instance
+- [x] Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable / weak / reused
 
 ## These are the most likely incident response actions you'll take.
 
@@ -32,6 +32,21 @@ You will not be able to start grepping or Splunking through logs as you may expe
 The [`/sys/audit-hash`](https://www.vaultproject.io/api/system/audit-hash.html) API is used to create these hashes. This is `hmac-sha56` with a salt, so you'll have to perform this hash on Vault itself or extract the salt and perform it elsewhere.
 
 If the victim configuration has `hmac_accessor=false` in its audit backend, then the token accessor will be in plaintext. A token accessor references a token, which is more helpful for searching if you have one available to reference a compromised token.
+
+```
+$ curl \
+    --header "X-Vault-Token: ..." \
+    --request POST \
+    --data @payload.json \
+    https://vault.rocks/v1/sys/audit-hash/example-audit
+```
+With a payload `payload.json`:
+```
+{
+  "input": "my-secret-vault"
+}
+```
+
 
 ### Understanding vault's log behavior.
 Every request and response is logged, _if the token was valid_. So, hopefully, if you have logs, they should be thorough.
