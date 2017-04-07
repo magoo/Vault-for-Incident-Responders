@@ -15,7 +15,7 @@ A quick checklist for Vault deployments to have proper "forensic readiness" to m
 - [x] Finding a server with `-dev` will degrade every single protection that Vault offers, possibly in a test instance
 - [x] Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable / weak / reused
 
-## These are the most likely incident response actions you'll take.
+## These are the most likely incident response actions you'll take. :fire_engine:
 
 ### Finding out where logs are flowing.
 You'll first be verifying where logs are found.
