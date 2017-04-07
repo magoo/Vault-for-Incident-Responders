@@ -8,14 +8,13 @@ This document has tips on _preparation_ for an incident, and tips on _investigat
 ## Preparing your Vault for a future incident and forensic review. :thumbsup:
 A quick checklist for Vault deployments to have proper "forensic readiness" to make an easier time for incident responders.
 
-- [x] Remember to enable the audit backend with `audit-enable`. This does not happen in the configuration file.
-- [x] Logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
+- [x] Vault audit enabled and logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
 - [x] Prepare to lookup hash values in any investigation, so you can query for IOC's or compromised token activity.
 - [x] Tokens should have `display-name` to help assist log analysis.
 - [x] If you are instrumenting an application client that consumes a "response wrapped" token, and it sees a failure, this may be an exception to handle as a security event. Vault logs will not treat it as such.
 
 ### Notable insecure configurations :thumbsdown:
-- [x] Using `log_raw` will directly expose token values into your audit backend.
+- [x] Using log_raw will directly expose all sensitive values (tokens, authentication passwords, etc) into your audit backend.
 - [x] Finding a server with `-dev` will degrade every single protection that Vault offers, possibly in a test instance
 - [x] Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable / weak / reused
 
@@ -33,7 +32,7 @@ Vault logs are nearly unusable for DFIR without some important notes. Because to
 
 You will not be able to start grepping or Splunking through logs as you may expect during an incident.
 
-The [`/sys/audit-hash`](https://www.vaultproject.io/api/system/audit-hash.html) API is used to create these hashes. This is `hmac-sha56` with a salt, so you'll have to perform this hash on Vault itself or extract the salt and perform it elsewhere.
+The [`/sys/audit-hash`](https://www.vaultproject.io/api/system/audit-hash.html) API is used to create these hashes. This is `hmac-sha56` with a salt, so you'll have to perform this hash on Vault itself.
 
 If the victim configuration has `hmac_accessor=false` in its audit backend, then the token accessor will be in plaintext. A token accessor references a token, which is more helpful for searching if you have one available to reference a compromised token.
 
@@ -60,7 +59,7 @@ Invalid tokens are not logged to avoid DoS scenarios. If Vault cannot write to a
 
 If Vault is being DoS'd, the audit backend may be a possible root cause. This vector would also imply a token is exposed to an adversary (because valid tokens are required to generate a log, and a disk I/O DoS would need one).
 
-The `'.request.id'` field is also important in finding the corresponding `'.response'` to a request, as both are logged.
+The `'.request.id'` field is also important in finding the corresponding `'.response'` to a request, as both are logged. You may consider just searching on responses, since requests are actually included in the response audit log.
 
 ### You may see a "response wrapped" value stolen to retrieve a secret.
 Vault has a feature called "Response Wrapping", which creates a single use token that can access a single value. It's one time use.
@@ -93,7 +92,7 @@ refresh_interval	768h0m0s
 -value          	rumplestiltskin
 ```
 
-Here we are, trying to retrieve it a second time, but the token is burnt and doesn't exist anymore.
+Here we are, trying to retrieve it a second time, but the token is burnt due to being outside of the ttl, and doesn't exist anymore.
 
 ```bash
 ➜  ~ vault unwrap d0f24a38-fd5b-97cd-d975-3ac1b3398d72
