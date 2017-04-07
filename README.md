@@ -33,7 +33,7 @@ The [`/sys/audit-hash`](https://www.vaultproject.io/api/system/audit-hash.html) 
 
 If the victim configuration has `hmac_accessor=false` in its audit backend, then the token accessor will be in plaintext. A token accessor references a token, which is more helpful for searching if you have one available to reference a compromised token.
 
-```
+```bash
 $ curl \
     --header "X-Vault-Token: ..." \
     --request POST \
@@ -41,7 +41,7 @@ $ curl \
     https://vault.rocks/v1/sys/audit-hash/example-audit
 ```
 With a payload `payload.json`:
-```
+```bash
 {
   "input": "my-secret-vault"
 }
@@ -64,14 +64,14 @@ Vault has a feature called "Response Wrapping", which creates a single use token
 
 This command creates a secret value in the Vault `secret` backend that we will retrieve:
 
-```
+```bash
 ➜  ~ vault write secret/myname -value=rumplestiltskin          
 Success! Data written to: secret/myname
 ```
 
 This requests the secret, but instead of accessing it directly, it wraps the value it would respond with within a burner token, and returns the token.
 
-```
+```bash
 ➜  ~ vault read -wrap-ttl="1m" secret/myname          
 Key                          	Value
 ---                          	-----
@@ -82,7 +82,7 @@ wrapping_token_creation_time:	2017-04-04 08:23:22.412065862 -0700 PDT
 
 This unwraps the burner token to access the value.
 
-```
+```bash
 ➜  ~ vault unwrap d0f24a38-fd5b-97cd-d975-3ac1b3398d72
 Key             	Value
 ---             	-----
@@ -92,7 +92,7 @@ refresh_interval	768h0m0s
 
 This tries to retrieve it a second time, but the token is burnt and doesn't exist anymore.
 
-```
+```bash
 ➜  ~ vault unwrap d0f24a38-fd5b-97cd-d975-3ac1b3398d72
 Error making API request.
 
