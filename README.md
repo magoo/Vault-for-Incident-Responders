@@ -10,7 +10,7 @@ A quick checklist for Vault deployments to have proper "forensic readiness" to m
 
 - [x] Remember to enable the audit backend with `audit-enable`. This does not happen in the configuration file.
 - [x] Logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
-- [x] Prepare to reverse hash values in any investigation.
+- [x] Prepare to lookup hash values in any investigation, so you can query for IOC's or compromised token activity.
 - [x] Tokens should have `display-name` to help assist log analysis.
 - [x] If you are instrumenting an application client that consumes a "response wrapped" token, and it sees a failure, this may be an exception to handle as a security event. Vault logs will not treat it as such.
 
