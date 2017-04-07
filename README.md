@@ -126,7 +126,7 @@ So, for example, if you were to disable an account on a server, you'd see failed
 Consider applying a neutered `deny` policy to an abusive token to continue logging its access. You cannot modify the policies a token on the fly, but you can modify the policy itself or recreate the token again with `vault token-create` with the `id=` parameter of the same token, essentially creating a new token. Modifying the policy itself may destroy access for other tokens reliant on that policy. Recreating the token (with `id`) with a different policy will change its accessor.
 
 ### You'll want to verify the vault binary.
-Vault is open source. Introducing a backdoor'ed vault would be a pretty sneaky trick. Their key for SHA256 and public key verification are available [here](https://www.hashicorp.com/security/).
+Vault is open source. Introducing a backdoor'ed vault would be a pretty sneaky trick. Their key for SHA256 and public key verification are available [here](https://www.hashicorp.com/security/). Cross your fingers this comes back alright. :pray:
 
 ### You may want to know about DoS risk from exposed token accessors.
 Accessors are reference values for tokens. They allow you to operate on tokens in some ways without passing the actual token itself. Exposure of an accessor has a risk of the underlying token being revoked by access by `/auth/token/revoke*`. Accessors are documented as lower risk, as they have no ability to reveal secrets, but are valuable in terms of revocation.
