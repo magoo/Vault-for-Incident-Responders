@@ -1,7 +1,7 @@
 # :rotating_light::fire: :key: Vault Incident Response :key: :fire: :rotating_light:
 Vault is important. It has your secrets!
 
-While it may be secure in acting predictably, a breach may still require some incident response work as many scenarios could lead to an adversary touching your Vault deployment.
+I've never had to include Vault in an investigation. Just hasn't happened yet, for me. Regardless, even a secure piece of software like Vault may need to be investigated. Many scenarios could lead to an adversary reaching a Vault deployment.
 
 This document has tips on _preparation_ for an incident, and tips on _investigating_ :mag: an incident.
 
@@ -126,7 +126,10 @@ So, for example, if you were to disable an account on a server, you'd see failed
 
 Consider applying a neutered `deny` policy to an abusive token to continue logging its access. You cannot modify the policies a token on the fly, but you can modify the policy itself or recreate the token again with `vault token-create` with the `id=` parameter of the same token, essentially creating a new token. Modifying the policy itself may destroy access for other tokens reliant on that policy. Recreating the token (with `id`) with a different policy will change its accessor.
 
-### Understanding DoS risk from exposed token accessors.
+### You'll want to verify the vault binary.
+Vault is open source. Introducing a backdoor'ed vault would be a pretty sneaky trick. Their key for SHA256 and public key verification are available [here](https://www.hashicorp.com/security/).
+
+### You may want to know about DoS risk from exposed token accessors.
 Accessors are reference values for tokens. They allow you to operate on tokens in some ways without passing the actual token itself. Exposure of an accessor has a risk of the underlying token being revoked by access by `/auth/token/revoke*`. Accessors are documented as lower risk, as they have no ability to reveal secrets, but are valuable in terms of revocation.
 
 If mass revocation by accessor is suspected and leakage is not immediately obvious, the `hmac_accessor=false` configuration in an audit backend will log accessors in plaintext, being a potential root cause for any unexpected, mass revocation.
