@@ -1,24 +1,28 @@
-# Vault Incident Response
-Preparing for, and responding to, an incident within Vault.
+# :rotating_light::fire: :key: Vault Incident Response :key: :fire: :rotating_light:
+Preparing for, and responding to, an incident within Vault. This is not necessarily advice to help secure a Vault deployment, but instead, to help when it eventually fails.
 
-## Preparing Vault for a forensic review.
+## Preparing your Vault for a future incident and forensic review.
 A quick checklist for Vault deployments to have proper "forensic readiness" to make an easier time for incident responders.
 
-- Remember to enable the audit backend with `audit-enable`. This does not happen in the configuration file.
-- Logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
-- Prepare to reverse hash values in any investigation.
-- Tokens should have `display-name` to help assist log analysis.
-- If you are instrumenting an application client that consumes a "response wrapped" token, and it sees a failure, this may be an exception to handle as a security event. Vault logs will not treat it as such.
+- [ ] Remember to enable the audit backend with `audit-enable`. This does not happen in the configuration file.
+- [ ] Logs going to a centralized location, highly maintained for availability and searchable, and outside of any security blast radius as much as possible.
+- [ ] Prepare to reverse hash values in any investigation.
+- [ ] Tokens should have `display-name` to help assist log analysis.
+- [ ] If you are instrumenting an application client that consumes a "response wrapped" token, and it sees a failure, this may be an exception to handle as a security event. Vault logs will not treat it as such.
 
 ### Notable insecure configurations
-- Using `log_raw` will directly expose token values into your audit backend.
-- Starting a server with `-dev` will degrade every single protection that Vault offers
-- Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable or weak.
+- [ ] Using `log_raw` will directly expose token values into your audit backend.
+- [ ] Starting a server with `-dev` will degrade every single protection that Vault offers
+- [ ] Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable or weak.
 
-## Notes on incident response patterns
+## These are the most likely incident response actions you'll take.
 
 ### Finding out where logs are flowing.
-Incident responders will first be verifying where logs are found. This is done with `vault audit-list`. If this not available for some reason, a very, very small amount of what vault has been doing will be available in the server's STDOUT, hopefully captured somehow.
+You'll first be verifying where logs are found.
+
+`vault audit-list`
+
+If this not available for some reason, a very, very small amount of what vault's behavior will will be available in the server's STDOUT, hopefully captured somehow.
 
 ### Preparing a wrapper script to assist with log hunting.
 Vault logs are nearly unusable for DFIR without some important notes. Because token values are inherently high risk, Vault hashes them before writing them to logs. Vault also hashes just about everything else too.
