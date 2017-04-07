@@ -62,7 +62,7 @@ If Vault is being DoS'd, the audit backend may be a possible root cause. This ve
 
 The `'.request.id'` field is also important in finding the corresponding `'.response'` to a request, as both are logged.
 
-### Following up on a response wrapper breach.
+### You may see a "response wrapped" value stolen to retrieve a secret.
 Vault has a feature called "Response Wrapping", which creates a single use token that can access a single value. It's one time use.
 
 This command creates a secret value in the Vault `secret` backend that we will retrieve:
@@ -119,7 +119,7 @@ However, this does not create a log. As a DFIR responder looking at Vault logs (
 
 Thus, the only expected behavior would be a client error of some sort on the other end, as a consumer application of the secret would fail to do its job. For instance, a database client failing to authenticate itself because a password was not available to create the connection. I would not predict that applications acting as vault clients would include exception handling to surface this type of malicious behavior as an alert, but a client suddenly failing may be an indicator to a compromised response wrapper.
 
-### Monitoring use of disabled tokens.
+### You may want to monitor the use of disabled tokens.
 Similar to Response Wrapping, revoked tokens don't produce logs. You'll lose visibility into activity on a key you've disabled during incident response as an approach towards adversarial containment. Thus, if that key were to be used by the adversary elsewhere on the network, you'll lose that additional insight that IR is incomplete and an adversary is off the network.
 
 So, for example, if you were to disable an account on a server, you'd see failed SSH in authentication logs if the adversary was actively trying their previously compromised password. That failure might have forensic value during incident response. This is different with Vault logs, in that you wouldn't see the failure.
