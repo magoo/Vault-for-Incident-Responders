@@ -1,5 +1,9 @@
 # :rotating_light::fire: :key: Vault Incident Response :key: :fire: :rotating_light:
-Preparing for, and responding to, an incident within Vault. This is not necessarily advice to help secure a Vault deployment, but instead, to help when it eventually fails.
+Vault is important. It has your secrets!
+
+While it may be secure in acting predictably, a breach may still require some incident response work as many scenarios could lead to an adversary touching your Vault deployment.
+
+This document has tips on _preparation_ for an incident, and tips on _investigating_ :mag: an incident.
 
 ## Preparing your Vault for a future incident and forensic review. :thumbsup:
 A quick checklist for Vault deployments to have proper "forensic readiness" to make an easier time for incident responders.
@@ -17,14 +21,14 @@ A quick checklist for Vault deployments to have proper "forensic readiness" to m
 
 ## These are the most likely incident response actions you'll take. :fire_engine:
 
-### Finding out where logs are flowing.
-You'll first be verifying where logs are found.
+### You'll want to know where logs are flowing.
+This configuration is only found here:
 
 `vault audit-list`
 
-If this not available for some reason, a very, very small amount of what vault's behavior will will be available in the server's STDOUT, hopefully captured somehow.
+If logs were not enabled, a very, very small amount of what vault's behavior will will be available in the server's STDOUT, hopefully captured somehow.
 
-### Preparing a wrapper script to assist with log hunting.
+### You'll prepare a wrapper script to assist with log hunting.
 Vault logs are nearly unusable for DFIR without some important notes. Because token values are inherently high risk, Vault hashes them before writing them to logs. Vault also hashes just about everything else too.
 
 You will not be able to start grepping or Splunking through logs as you may expect during an incident.
@@ -47,9 +51,8 @@ With a payload `payload.json`:
 }
 ```
 
-
-### Understanding vault's log behavior.
-Every request and response is logged, _if the token was valid_. So, hopefully, if you have logs, they should be thorough.
+### You'll start trying to understanding vault's log behavior.
+Every request and response is logged, _if the token was valid_. So, hopefully, if you have logs, they should be thorough for anything that resulted in an authenticated request.
 
 Invalid tokens are not logged to avoid DoS scenarios. If Vault cannot write to a log, it will not fulfill a request.
 
@@ -60,7 +63,7 @@ If Vault is being DoS'd, the audit backend may be a possible root cause. This ve
 The `'.request.id'` field is also important in finding the corresponding `'.response'` to a request, as both are logged.
 
 ### Following up on a response wrapper breach.
-Vault has a feature called "Response Wrapping", which creates a single use token that can access a single value. Think of it like a burner token as it's always been easier to explain, but this is not official Vault verbiage.
+Vault has a feature called "Response Wrapping", which creates a single use token that can access a single value. It's one time use.
 
 This command creates a secret value in the Vault `secret` backend that we will retrieve:
 
@@ -69,7 +72,7 @@ This command creates a secret value in the Vault `secret` backend that we will r
 Success! Data written to: secret/myname
 ```
 
-This requests the secret, but instead of accessing it directly, it wraps the value it would respond with within a burner token, and returns the token.
+This requests the secret, but instead of accessing it directly, it wraps the value it would respond with within a one time use token, and returns the token.
 
 ```bash
 ➜  ~ vault read -wrap-ttl="1m" secret/myname          
@@ -80,7 +83,7 @@ wrapping_token_ttl:          	1m0s
 wrapping_token_creation_time:	2017-04-04 08:23:22.412065862 -0700 PDT
 ```
 
-This unwraps the burner token to access the value.
+*Any* request using this token will burn it. The only useful API call is to unwrap it, which this CLI command will do. Anything else will waste it.
 
 ```bash
 ➜  ~ vault unwrap d0f24a38-fd5b-97cd-d975-3ac1b3398d72
@@ -90,7 +93,7 @@ refresh_interval	768h0m0s
 -value          	rumplestiltskin
 ```
 
-This tries to retrieve it a second time, but the token is burnt and doesn't exist anymore.
+Here we are, trying to retrieve it a second time, but the token is burnt and doesn't exist anymore.
 
 ```bash
 ➜  ~ vault unwrap d0f24a38-fd5b-97cd-d975-3ac1b3398d72
@@ -102,7 +105,11 @@ Code: 400. Errors:
 * wrapping token is not valid or does not exist
 ```
 
-This error is not logged. A log would be expected behavior for a DFIR response, as it should indicate malicious replay behavior, but there is a reasonable explanation why it is not.
+OK. Now we know the security value of it. It's stores a value behind a one time use token. If it's burnt before intended, someone malicious observed it.
+
+However!
+
+This error is not logged. A log may be expected behavior for a DFIR response, as it should indicate malicious replay behavior, but there is a reasonable explanation why it is not.
 
 This Response Wrapping design pattern is meant to be useful when passing a secret through risky territory. If the token is unwrapped and burnt before arrival at its final destination, the intended recipient shouldn't be able to use the secret value. In practice, it's encouraged to use this sort of design pattern when injecting a token through a build environment that might be subject to operator snooping.
 
@@ -113,7 +120,7 @@ However, this does not create a log. As a DFIR responder looking at Vault logs (
 Thus, the only expected behavior would be a client error of some sort on the other end, as a consumer application of the secret would fail to do its job. For instance, a database client failing to authenticate itself because a password was not available to create the connection. I would not predict that applications acting as vault clients would include exception handling to surface this type of malicious behavior as an alert, but a client suddenly failing may be an indicator to a compromised response wrapper.
 
 ### Monitoring use of disabled tokens.
-Similar to Response Wrapping, revoked tokens don't produce logs. You'll lose visibility into activity on a key you've disabled during incident response as an approach towards adversary containment. Thus, if that key were to be used by the adversary elsewhere on the network, you'll lose that additional insight that IR is incomplete and an adversary is off the network.
+Similar to Response Wrapping, revoked tokens don't produce logs. You'll lose visibility into activity on a key you've disabled during incident response as an approach towards adversarial containment. Thus, if that key were to be used by the adversary elsewhere on the network, you'll lose that additional insight that IR is incomplete and an adversary is off the network.
 
 So, for example, if you were to disable an account on a server, you'd see failed SSH in authentication logs if the adversary was actively trying their previously compromised password. That failure might have forensic value during incident response. This is different with Vault logs, in that you wouldn't see the failure.
 
