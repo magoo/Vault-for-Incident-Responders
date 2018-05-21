@@ -17,6 +17,13 @@ A quick checklist for Vault deployments to have proper "forensic readiness" to m
 - [x] Using log_raw will directly expose all sensitive values (tokens, authentication passwords, etc) into your audit backend.
 - [x] Finding a server with `-dev` will degrade every single protection that Vault offers, possibly in a test instance
 - [x] Using the `-id` parameter in any `vault token-create` as a method to create tokens may make tokens predictable / weak / reused
+- [x] Several CLI flags including `-audit-non-hmac*` will disable HMAC'd audit logs:
+
+```
+vault secrets tune \
+    -audit-non-hmac-response-keys=certificate \
+    <mount-point>
+ ```
 
 ## These are the most likely incident response actions you'll take. :fire_engine:
 
